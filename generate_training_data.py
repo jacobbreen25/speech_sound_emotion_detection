@@ -1,5 +1,5 @@
 import utilities as util
-from preprocess_audio import remove_silence
+from preprocess_audio import preprocess_audio
 import librosa
 import librosa.display
 import numpy as np
@@ -9,9 +9,9 @@ import numpy as np
 # generates a csv that shows the features for each individual audio file
 def generate_features(data, sample_rate, verbose=True):
     np.set_printoptions(linewidth=1000000000000)
+
     features = np.array([], dtype=float)
     mfcc = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=13)
-    # print(mfcc)
     chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
     SC = librosa.feature.spectral_centroid(y=data, sr=sample_rate)
     ZC = librosa.feature.zero_crossing_rate(y=data)
@@ -58,16 +58,16 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
     print(f"Found {len(files)} wav files in directory \'{data_dir}\'.")
     if stop_after is not None: files = files[:stop_after]
     for f in files:
-        d_audio = [f]
-        d_silent = [f]
-        wav_data, sr = util.load_wav_file(f)
-        non_silent_data, silent_data, sr = remove_silence(f,sample_rate=sr)
+        d_audio = [] # [f]
+        d_silent = [] # [f]
+        # wav_data, sr = util.load_wav_file(f)
+        non_silent_data, silent_data, sr = preprocess_audio(f)
         details = util.get_file_details(f,decode_details)
         # for info in details: d.append(details[info])
         d_audio.append(details['emotion'])
         d_audio.append(details['intensity'])
-        d_silent.append("neutral") # Set emotion to neutral for silent clip
-        d_silent.append("normal") # Set intensity to normal for silent clip
+        d_silent.append("1") # Set emotion to neutral for silent clip
+        d_silent.append("1") # Set intensity to normal for silent clip
         
         # Append feature names to headers as needed
         for clip in non_silent_data:
@@ -86,9 +86,10 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
 
 if __name__ == "__main__":
     DATA_DIR = '../data'
-    OUTPUT_FILE = './data.csv'
-    DECODE_DETAILS = True
-    STOP_AFTER = None # set to None to go through all data
+    OUTPUT_FILE = './data_small.csv'
+    DECODE_DETAILS = False
+    STOP_AFTER = 10#None # set to None to go through all data
     data, headers = generate_training_data(DATA_DIR, DECODE_DETAILS, STOP_AFTER)
-    util.write_csv(OUTPUT_FILE,data,headers)
+    # util.write_csv(OUTPUT_FILE,data,headers)
+    util.write_csv(OUTPUT_FILE,data)
 

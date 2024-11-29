@@ -2,6 +2,31 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+import pandas as pd
+
+def load_csv_data(file_path):
+    """
+    Loads a CSV file with the first column as labels and the rest as features.
+    
+    Args:
+        file_path (str): Path to the CSV file.
+        
+    Returns:
+        tuple: (features_tensor, labels_tensor)
+    """
+    # Load the CSV file into a pandas DataFrame
+    df = pd.read_csv(file_path)
+    
+    # Separate labels (first column) and features (remaining columns)
+    labels = df.iloc[:, 0]
+    features = df.iloc[:, 1:]
+    
+    # Convert to PyTorch tensors
+    features_tensor = torch.tensor(features.values, dtype=torch.float32)
+    labels_tensor = torch.tensor(labels.values, dtype=torch.long)  # Use long for classification
+    
+    return features_tensor, labels_tensor
+
 
 # Define the neural network model
 class FullyConnectedNN(nn.Module):
@@ -44,21 +69,24 @@ class FullyConnectedNN(nn.Module):
     
 
 if __name__ == "__main__":
-    # Example usage: Initialize the model with an input size of 20
-    # TODO: Determine input size after loading feature vector
-    input_size = 20
-    model = FullyConnectedNN(input_size)
+    # Example data: Create some synthetic data (100 samples, 20 features)
+    # X = torch.randn(100, input_size)
+    # y = torch.randint(0, 8, (100,))  # Random integer labels in [0, 7]
 
+    data_file = "./data_small.csv"
+    X, y = load_csv_data(data_file)
+    print(f"x shape {X.shape}")
+    print(f"y shape {y.shape}")
+
+    input_size = X.shape[1]
+    model = FullyConnectedNN(input_size)
     # Print the model architecture
     print(model)
-    # Example data: Create some synthetic data (100 samples, 20 features)
-    # TODO: Remove this after featureloader is implemented above
-    X = torch.randn(100, input_size)
-    y = torch.randint(0, 8, (100,))  # Random integer labels in [0, 7]
-
+    
     # Prepare DataLoader
+    # TODO: Split data in to a train, test, and validation set
     dataset = TensorDataset(X, y)
-    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()  # Loss for classification
@@ -86,3 +114,5 @@ if __name__ == "__main__":
         print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}")
 
     #TODO: Test model after training and generate a confusion matrix
+
+    #TODO: Save model to test with new data later

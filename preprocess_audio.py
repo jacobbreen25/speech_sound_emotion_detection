@@ -28,9 +28,9 @@ def process_non_silent_clip(clip, sr, clip_duration=1.0):
 
     return processed_clips
     
-def remove_silence(audio_path, silence_thresh=-40, min_silence_duration=0.5, sample_rate=22050):
+def preprocess_audio(audio_path, silence_thresh=-40, min_silence_duration=0.5):
     # Load the audio file
-    y, sr = librosa.load(audio_path, sr=sample_rate)
+    y, sr = librosa.load(audio_path)
 
     # Detect non-silent intervals
     non_silent_intervals = librosa.effects.split(y, top_db=abs(silence_thresh), frame_length=2048, hop_length=512)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     audio_path = "test.wav"
 
     # Call the function to remove silence
-    non_silent_audio, silent_audio, sr = remove_silence(audio_path, silence_thresh=-40, min_silence_duration=0.5)
+    non_silent_audio, silent_audio, sr = preprocess_audio(audio_path, silence_thresh=-40, min_silence_duration=0.5)
     print(f"Non-Silent Shape: {non_silent_audio.shape} ({len(non_silent_audio)/sr:04f}s)")
     print(f"Silent Shape: {silent_audio.shape} ({len(silent_audio)/sr:04f}s)")
 
