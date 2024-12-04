@@ -87,10 +87,10 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
 
 
 if __name__ == "__main__":
-    DATA_DIR = '../data'
+    DATA_DIR = './data'
     OUTPUT_FILE = './data_small.csv'
     DECODE_DETAILS = False
-    STOP_AFTER = 10#None # set to None to go through all data
+    STOP_AFTER = None#None # set to None to go through all data
     data, headers = generate_training_data(DATA_DIR, DECODE_DETAILS, STOP_AFTER)
     # util.write_csv(OUTPUT_FILE,data,headers)
     util.write_csv(OUTPUT_FILE,data)

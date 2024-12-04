@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
 import pandas as pd
 
 def load_csv_data(file_path):
@@ -85,8 +87,14 @@ if __name__ == "__main__":
     
     # Prepare DataLoader
     # TODO: Split data in to a train, test, and validation set
-    dataset = TensorDataset(X, y)
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+    train_dataset = TensorDataset(X_train, y_train)
+    val_dataset = TensorDataset(X_val, y_val)
+    test_dataset = TensorDataset(X_test, y_test)
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()  # Loss for classification
@@ -95,12 +103,18 @@ if __name__ == "__main__":
     # Training loop
     epochs = 10
     for epoch in range(epochs):
-        for batch_X, batch_y in dataloader:
+        running_loss = 0.0
+        val_loss = 0.0
+
+        model.train()
+        for batch_X, batch_y in train_dataloader:
             # Zero the gradient buffers
             optimizer.zero_grad()
             
             # Forward pass
             outputs = model(batch_X)
+
+            print(batch_y.unique())
             
             # Compute the loss
             loss = criterion(outputs, batch_y)
@@ -110,9 +124,32 @@ if __name__ == "__main__":
             
             # Update the weights
             optimizer.step()
-        
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}")
+
+            running_loss += loss.item()
+            # validation after each epoch
+        avg_loss = running_loss / len(train_dataloader)
+        model.eval()
+        all_val_preds = []
+        all_val_labels = []
+
+        with torch.no_grad():
+            for batch_X, batch_y in val_dataloader:
+                outputs = model(batch_X)
+                loss = criterion(outputs, batch_y)
+                val_loss += loss.item()
+
+                _, preds = torch.max(outputs, 1)
+                all_val_preds.append(preds)
+                all_val_labels.append(batch_y)
+
+        avg_val_loss = val_loss / len(val_dataloader)
+        all_val_preds = torch.cat(all_val_preds).cpu()
+        all_val_labels = torch.cat(all_val_labels).cpu()
+        val_accuracy = accuracy_score(all_val_labels, all_val_preds)
+
+    print(f"Epoch {epoch+1}/{epochs}, Training Loss: {avg_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
     #TODO: Test model after training and generate a confusion matrix
+
 
     #TODO: Save model to test with new data later
