@@ -66,18 +66,20 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
         # for info in details: d.append(details[info])
         d_audio.append(details['emotion'])
         d_audio.append(details['intensity'])
-        d_silent.append("1") # Set emotion to neutral for silent clip
-        d_silent.append("1") # Set intensity to normal for silent clip
+        d_silent.append("0") # Set emotion to neutral for silent clip
+        d_silent.append("0") # Set intensity to normal for silent clip
         
         # Append feature names to headers as needed
         for clip in non_silent_data:
             audio_data = d_audio.copy()
             features = generate_features(clip, sr)
+            # features = ['test']
             for x in features: audio_data.append(x)
             data.append(audio_data)
 
         if silent_data is not None:
             features = generate_features(silent_data, sr)
+            # features = ['test']
             for x in features: d_silent.append(x)
             data.append(d_silent)
 
