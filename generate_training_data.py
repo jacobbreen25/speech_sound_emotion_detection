@@ -12,7 +12,7 @@ def generate_features(data, sample_rate, verbose=True):
 
     features = np.array([], dtype=float)
     mfcc = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=13)
-    chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
+    # chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
     SC = librosa.feature.spectral_centroid(y=data, sr=sample_rate)
     ZC = librosa.feature.zero_crossing_rate(y=data)
     RMSE = librosa.feature.rms(y=data)
@@ -34,7 +34,7 @@ def generate_features(data, sample_rate, verbose=True):
 
     features = np.hstack((features,mfcc.flatten()))
     # if verbose: print(f"New Features Shape: {features.shape} - MFCC Shape: {mfcc.shape}")
-    features = np.hstack((features,chroma.flatten()))
+    # features = np.hstack((features,chroma.flatten()))
     # if verbose: print(f"New Features Shape: {features.shape} - Chroma Shape: {chroma.shape}")
     features = np.hstack((features,SC.flatten()))
     # if verbose: print(f"New Features Shape: {features.shape} - SC Shape: {SC.shape}")
@@ -66,18 +66,20 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
         # for info in details: d.append(details[info])
         d_audio.append(details['emotion'])
         d_audio.append(details['intensity'])
-        d_silent.append("1") # Set emotion to neutral for silent clip
-        d_silent.append("1") # Set intensity to normal for silent clip
+        d_silent.append("0") # Set emotion to neutral for silent clip
+        d_silent.append("0") # Set intensity to normal for silent clip
         
         # Append feature names to headers as needed
         for clip in non_silent_data:
             audio_data = d_audio.copy()
             features = generate_features(clip, sr)
+            # features = ['test']
             for x in features: audio_data.append(x)
             data.append(audio_data)
 
         if silent_data is not None:
             features = generate_features(silent_data, sr)
+            # features = ['test']
             for x in features: d_silent.append(x)
             data.append(d_silent)
 
@@ -86,7 +88,7 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
 
 if __name__ == "__main__":
     DATA_DIR = './data'
-    OUTPUT_FILE = './data_small.csv'
+    OUTPUT_FILE = './data_v1.csv'
     DECODE_DETAILS = False
     STOP_AFTER = None#None # set to None to go through all data
     data, headers = generate_training_data(DATA_DIR, DECODE_DETAILS, STOP_AFTER)

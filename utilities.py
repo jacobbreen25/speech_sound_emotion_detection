@@ -25,17 +25,17 @@ def get_file_details(file_path, decode=False, verbose=True):
     identifiers = file[:-4].split('-')
     # print(identifiers)
     details = dict()
-    details['modality'] = [None, "full-AV", "video-only", "audio-only"][int(identifiers[0])] if decode else identifiers[0]
-    details['channel'] = [None, "speech", "song"][int(identifiers[1])] if decode else identifiers[1]
-    details['emotion'] = [None, "neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"][int(identifiers[2])] if decode else identifiers[2]
-    details['intensity'] = [None, "normal", "strong"][int(identifiers[3])] if decode else identifiers[3]
-    details['statement'] = [None, "Kids are talking by the door","Dogs are sitting by the door"][int(identifiers[4])] if decode else identifiers[4]
-    details['repetition'] = [None, "1st Repetition", "2nd Repetiion"][int(identifiers[5])] if decode else identifiers[5]
-    details['actor'] = str(identifiers[6]) + (" (Female)" if int(identifiers[6])%2==0 else " (Male)") if decode else identifiers[6]
+    details['modality'] = [None, "full-AV", "video-only", "audio-only"][int(identifiers[0])] if decode else int(identifiers[0])
+    details['channel'] = [None, "speech", "song"][int(identifiers[1])] if decode else int(identifiers[1])
+    details['emotion'] = [None, "neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"][int(identifiers[2])] if decode else int(identifiers[2])
+    details['intensity'] = [None, "normal", "strong"][int(identifiers[3])] if decode else int(identifiers[3])
+    details['statement'] = [None, "Kids are talking by the door","Dogs are sitting by the door"][int(identifiers[4])] if decode else int(identifiers[4])
+    details['repetition'] = [None, "1st Repetition", "2nd Repetiion"][int(identifiers[5])] if decode else int(identifiers[5])
+    details['actor'] = str(identifiers[6]) + (" (Female)" if int(identifiers[6])%2==0 else " (Male)") if decode else int(identifiers[6])
     if verbose:
-        s = ""
+        s = f"{file} -\t"
         for k in details:
-            s += details[k] + " - "
+            s += str(details[k]) + " - "
         print(s[:-3])
     return details
     

@@ -32,7 +32,7 @@ def load_csv_data(file_path):
 
 # Define the neural network model
 class FullyConnectedNN(nn.Module):
-    def __init__(self, input_size, hidden_sizes=None, output_size=8):
+    def __init__(self, input_size, hidden_sizes=None, output_size=9):
         super(FullyConnectedNN, self).__init__()
         if hidden_sizes is None:
             hidden_sizes = self.get_hidden_sizes(input_size,output_size)
@@ -92,13 +92,14 @@ if __name__ == "__main__":
     train_dataset = TensorDataset(X_train, y_train)
     val_dataset = TensorDataset(X_val, y_val)
     test_dataset = TensorDataset(X_test, y_test)
-    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
+    batch_size = 4
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()  # Loss for classification
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=1.001)
 
     # Training loop
     epochs = 10
@@ -114,7 +115,7 @@ if __name__ == "__main__":
             # Forward pass
             outputs = model(batch_X)
 
-            print(batch_y.unique())
+            print(outputs, batch_y)
             
             # Compute the loss
             loss = criterion(outputs, batch_y)
@@ -147,7 +148,7 @@ if __name__ == "__main__":
         all_val_labels = torch.cat(all_val_labels).cpu()
         val_accuracy = accuracy_score(all_val_labels, all_val_preds)
 
-    print(f"Epoch {epoch+1}/{epochs}, Training Loss: {avg_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
+        print(f"Epoch {epoch+1}/{epochs}, Training Loss: {avg_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
     #TODO: Test model after training and generate a confusion matrix
 
