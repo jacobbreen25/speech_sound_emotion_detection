@@ -12,23 +12,44 @@ def process_silent_clip(clip, sr, clip_duration=1.0):
         # Crop clip if it's too long
         processed_clip = clip[:clip_length]
 
+    testing = False
+    if testing: 
+        sf.write("silence_concatenated.wav",clip,sr)
+        sf.write("silence_trimmed.wav",processed_clip,sr)
+
     return processed_clip
 
-def process_non_silent_clip(clip, sr, clip_duration=1.0):
+def process_non_silent_clip(clip, sr, clip_duration=1.0, step_size=1.0):
+    testing = False
+
     clip_length = int(clip_duration * sr)  # Convert duration to samples
     processed_clips = []
     if len(clip) < clip_length:
         # Pad short clips with zeroes
         processed_clips.append(np.pad(clip, (0, clip_length - len(clip)), mode='constant'))
     else:
-        #NOTE: This is lazy, and assumes the actual audio clip is less than 2 seconds,
-        #   may need to create a more programatic way of breaking these up dynamically
-        processed_clips.append(clip[:clip_length])
+        start = 0
+        end = clip_length
+        while end < len(clip):
+            if testing: 
+                print(f"Start: {start} - End: {end}")
+            processed_clips.append(clip[start:end])
+            start += int(step_size * clip_length)
+            end = start + clip_length
+        # Add a clip from the very end of the audio to make sure everything is captured
         processed_clips.append(clip[-clip_length:])
 
+    # For presentation, save individual clips
+    if testing:
+        i=1
+        print(f"Clip len: {clip_length}")
+        for c in processed_clips:
+            print(f"> len - {len(c)}")
+            sf.write(f"speech_{i}.wav",c,sr)
+            i += 1
     return processed_clips
     
-def preprocess_audio(audio_path, silence_thresh=-40, min_silence_duration=0.5):
+def preprocess_audio(audio_path, silence_thresh=-40, min_silence_duration=0.4):
     # Load the audio file
     y, sr = librosa.load(audio_path)
 
@@ -75,16 +96,16 @@ def preprocess_audio(audio_path, silence_thresh=-40, min_silence_duration=0.5):
 
 
 if __name__ == "__main__":
-    audio_path = "test.wav"
+    audio_path = "03-01-03-02-02-02-03.wav"
 
     # Call the function to remove silence
     non_silent_audio, silent_audio, sr = preprocess_audio(audio_path, silence_thresh=-40, min_silence_duration=0.5)
-    print(f"Non-Silent Shape: {non_silent_audio.shape} ({len(non_silent_audio)/sr:04f}s)")
-    print(f"Silent Shape: {silent_audio.shape} ({len(silent_audio)/sr:04f}s)")
+    # print(f"Non-Silent Shape: {non_silent_audio.shape} ({len(non_silent_audio)/sr:04f}s)")
+    # print(f"Silent Shape: {silent_audio.shape} ({len(silent_audio)/sr:04f}s)")
 
     # Save the non-silent audio
-    sf.write("non_silent_audio.wav", non_silent_audio, sr)
+    # sf.write("non_silent_audio.wav", non_silent_audio, sr)
 
     # Save the combined silent clips
-    sf.write("silent_audio.wav", silent_audio, sr)
+    # sf.write("silent_audio.wav", silent_audio, sr)
 

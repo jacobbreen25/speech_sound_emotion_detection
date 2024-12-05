@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
 import pandas as pd
+import matplotlib.pyplot as plt
+from os.path import join
 
 def load_csv_data(file_path):
     """
@@ -34,6 +36,7 @@ def load_csv_data(file_path):
 class FullyConnectedNN(nn.Module):
     def __init__(self, input_size, hidden_sizes=None, output_size=9):
         super(FullyConnectedNN, self).__init__()
+        hidden_sizes = [3168, 1584, 792, 396, 198, 99]
         if hidden_sizes is None:
             hidden_sizes = self.get_hidden_sizes(input_size,output_size)
 
@@ -49,14 +52,16 @@ class FullyConnectedNN(nn.Module):
             self.layers.append(nn.Linear(size_in, size_out))
         
         self.relu = nn.ReLU()  # Activation function
-        self.softmax = nn.Softmax(dim=1)  # Output activation for classification
+        # self.softmax = nn.Softmax(dim=1)  # Output activation for classification
     
     def forward(self, x):
         # Apply activation after all layers except the last
         for layer in self.layers[:-1]:  
+        # for layer in self.layers: 
             x = self.relu(layer(x))
         # Softmax the final layer
-        x = self.softmax(self.layers[-1](x))
+        # x = self.softmax(self.layers[-1](x))
+        x = self.layers[-1](x)
         return x
 
     def get_hidden_sizes(self,input_size,output_size):
@@ -75,7 +80,7 @@ if __name__ == "__main__":
     # X = torch.randn(100, input_size)
     # y = torch.randint(0, 8, (100,))  # Random integer labels in [0, 7]
 
-    data_file = "./data_small.csv"
+    data_file = "./data_v2.csv"
     X, y = load_csv_data(data_file)
     print(f"x shape {X.shape}")
     print(f"y shape {y.shape}")
@@ -92,15 +97,18 @@ if __name__ == "__main__":
     train_dataset = TensorDataset(X_train, y_train)
     val_dataset = TensorDataset(X_val, y_val)
     test_dataset = TensorDataset(X_test, y_test)
-    batch_size = 4
+    batch_size = 16
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()  # Loss for classification
-    optimizer = optim.Adam(model.parameters(), lr=1.001)
-
+    optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-4)
+    
+    # Initialize lists to store losses
+    train_losses = []
+    val_losses = []
     # Training loop
     epochs = 10
     for epoch in range(epochs):
@@ -115,11 +123,11 @@ if __name__ == "__main__":
             # Forward pass
             outputs = model(batch_X)
 
-            print(outputs, batch_y)
+            # print(outputs, batch_y)
             
             # Compute the loss
             loss = criterion(outputs, batch_y)
-            
+            # print(f"LOSS: {loss}")
             # Backward pass
             loss.backward()
             
@@ -129,6 +137,7 @@ if __name__ == "__main__":
             running_loss += loss.item()
             # validation after each epoch
         avg_loss = running_loss / len(train_dataloader)
+        train_losses.append(avg_loss)  # Store training loss
         model.eval()
         all_val_preds = []
         all_val_labels = []
@@ -144,6 +153,7 @@ if __name__ == "__main__":
                 all_val_labels.append(batch_y)
 
         avg_val_loss = val_loss / len(val_dataloader)
+        val_losses.append(avg_val_loss)  # Store validation loss
         all_val_preds = torch.cat(all_val_preds).cpu()
         all_val_labels = torch.cat(all_val_labels).cpu()
         val_accuracy = accuracy_score(all_val_labels, all_val_preds)
@@ -151,6 +161,18 @@ if __name__ == "__main__":
         print(f"Epoch {epoch+1}/{epochs}, Training Loss: {avg_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
     #TODO: Test model after training and generate a confusion matrix
+    # Plot training and validation losses
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(1, epochs + 1), train_losses, label='Training Loss')
+    plt.plot(range(1, epochs + 1), val_losses, label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    plt.show()
 
-
-    #TODO: Save model to test with new data later
+    #Save model to test with new data later
+    model_path = './models'
+    model_name = 'model_v1-2.pth'
+    torch.save(model.state_dict(), join(model_path,model_name))
+    print("Model saved successfully!")
