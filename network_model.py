@@ -80,7 +80,7 @@ if __name__ == "__main__":
     print(f"x shape {X.shape}")
     print(f"y shape {y.shape}")
 
-    input_size = X.shape[1]
+    input_size = X.shape[1] + 1
     model = FullyConnectedNN(input_size)
     # Print the model architecture
     print(model)
