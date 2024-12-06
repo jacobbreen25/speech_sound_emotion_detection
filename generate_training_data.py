@@ -4,6 +4,7 @@ import librosa
 import librosa.display
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 # CREATES FEATURES FROM AN ARRAY OF AUDIO DATA    
 # BUILD ON THIS
@@ -82,19 +83,20 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
             data.append(audio_data)
 
         if silent_data is not None:
-            counts[0] += 1
-            features = generate_features(silent_data, sr)
-            print(f" > {len(features)} features - Silent")
-            # features = ['test']
-            for x in features: d_silent.append(x)
-            data.append(d_silent)
+            if random.random() < 0.55 and counts[0] < 550:
+                counts[0] += 1
+                features = generate_features(silent_data, sr)
+                print(f" > {len(features)} features - Silent")
+                # features = ['test']
+                for x in features: d_silent.append(x)
+                data.append(d_silent)
 
     return data, headers, counts
 
 
 if __name__ == "__main__":
     DATA_DIR = '../data'
-    OUTPUT_FILE = './data_v2.csv'
+    OUTPUT_FILE = './data_v3.csv'
     DECODE_DETAILS = False
     STOP_AFTER = None#None # set to None to go through all data
     data, headers, counts = generate_training_data(DATA_DIR, DECODE_DETAILS, STOP_AFTER)
@@ -103,6 +105,8 @@ if __name__ == "__main__":
     # Plotting the bar graph
     x_labels = ["silence", "neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"]  # Label names
     plt.bar(x_labels, counts, color='skyblue')
+    y_ticks = np.arange(0, max(counts) + 50, 50)  # Tick marks every 5 counts
+    plt.yticks(y_ticks)
     # Add titles and labels
     plt.title("Label Counts")
     plt.xlabel("Labels")

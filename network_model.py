@@ -7,6 +7,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_s
 import pandas as pd
 import matplotlib.pyplot as plt
 from os.path import join
+import seaborn as sns
 
 def load_csv_data(file_path):
     """
@@ -31,12 +32,65 @@ def load_csv_data(file_path):
     
     return features_tensor, labels_tensor
 
+def plot_confusion_matrix(conf_matrix, class_names):
+    """
+    Plots a confusion matrix as a heatmap.
+    
+    Args:
+        conf_matrix (ndarray): Confusion matrix.
+        class_names (list): List of class names corresponding to matrix rows/columns.
+    """
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", 
+                xticklabels=class_names, yticklabels=class_names)
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.title("Confusion Matrix")
+    plt.show()
+
+def get_predictions(model, dataloader, device='cpu'):
+    """
+    Gets all predictions from the test DataLoader.
+
+    Args:
+        model (torch.nn.Module): The trained model.
+        dataloader (torch.utils.data.DataLoader): DataLoader for the test set.
+        device (str): Device to run the model on ('cpu' or 'cuda').
+    
+    Returns:
+        torch.Tensor: All predictions.
+        torch.Tensor: Corresponding true labels.
+    """
+    model.eval()  # Set model to evaluation mode
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():  # Disable gradient computation
+        for batch in dataloader:
+            inputs, labels = batch  # Unpack the batch
+            # inputs = inputs.to(device)
+            # labels = labels.to(device)
+            
+            outputs = model(inputs)  # Forward pass
+            preds = torch.argmax(outputs, dim=1)  # Get predicted class
+            
+            all_preds.append(preds)
+            all_labels.append(labels)
+    
+    # Concatenate all batches into a single tensor
+    all_preds = torch.cat(all_preds)
+    all_labels = torch.cat(all_labels)
+    # print(all_labels)
+    # print(all_preds)
+    
+    return all_preds, all_labels
 
 # Define the neural network model
 class FullyConnectedNN(nn.Module):
     def __init__(self, input_size, hidden_sizes=None, output_size=9):
         super(FullyConnectedNN, self).__init__()
         hidden_sizes = [3168, 1584, 792, 396, 198, 99]
+        # hidden_sizes = [100]
         if hidden_sizes is None:
             hidden_sizes = self.get_hidden_sizes(input_size,output_size)
 
@@ -80,7 +134,7 @@ if __name__ == "__main__":
     # X = torch.randn(100, input_size)
     # y = torch.randint(0, 8, (100,))  # Random integer labels in [0, 7]
 
-    data_file = "./data_v2.csv"
+    data_file = "./data_v3.csv"
     X, y = load_csv_data(data_file)
     print(f"x shape {X.shape}")
     print(f"y shape {y.shape}")
@@ -100,7 +154,7 @@ if __name__ == "__main__":
     batch_size = 16
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()  # Loss for classification
@@ -160,9 +214,16 @@ if __name__ == "__main__":
 
         print(f"Epoch {epoch+1}/{epochs}, Training Loss: {avg_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
 
-    #TODO: Test model after training and generate a confusion matrix
+    #Test model after training and generate a confusion matrix
+    print("Getting predictions")
+    labels =["silence", "neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"]
+    test_predictions, test_labels = get_predictions(model,test_dataloader)
+    # Compute confusion matrix
+    conf_matrix = confusion_matrix(test_labels, test_predictions)
+    plot_confusion_matrix(conf_matrix,labels)
+
     # Plot training and validation losses
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(6, 4))
     plt.plot(range(1, epochs + 1), train_losses, label='Training Loss')
     plt.plot(range(1, epochs + 1), val_losses, label='Validation Loss')
     plt.xlabel('Epoch')
@@ -173,6 +234,6 @@ if __name__ == "__main__":
 
     #Save model to test with new data later
     model_path = './models'
-    model_name = 'model_v1-2.pth'
+    model_name = 'model_v2.pth'
     torch.save(model.state_dict(), join(model_path,model_name))
     print("Model saved successfully!")
