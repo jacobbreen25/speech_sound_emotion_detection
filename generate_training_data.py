@@ -13,11 +13,16 @@ def generate_features(data, sample_rate, verbose=True):
     np.set_printoptions(linewidth=1000000000000)
 
     features = np.array([], dtype=float)
+    # Mel-Frequency Cepstral Coefficients (MFCCs) are a set of features that represent the short-term power spectrum of a sound
     mfcc = librosa.feature.mfcc(y=data, sr=sample_rate, n_mfcc=13)
     # chroma = librosa.feature.chroma_stft(y=data, sr=sample_rate)
+    # Spectral centroid is a statistical measurement that indicates the center of mass of a spectrum, or the average frequency of a sound
     SC = librosa.feature.spectral_centroid(y=data, sr=sample_rate)
+    # Zero-crossing rate (ZCR) is the rate at which a signal changes from positive to zero to negative, or vice versa
     ZC = librosa.feature.zero_crossing_rate(y=data)
+    # RMS, or root mean square, is a measurement of the average loudness of an audio signal over a period of time
     RMSE = librosa.feature.rms(y=data)
+    # A Mel Spectrogram is a visual representation of an audio signal's frequency spectrum over time
     ML = librosa.feature.melspectrogram(y=data, sr=sample_rate, n_mels=128)
 
     # features.append(" ".join(map(str, mfcc.flatten())))
