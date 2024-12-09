@@ -1,89 +1,112 @@
 import numpy as np
-import pandas
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
+from sklearn.preprocessing import StandardScaler
 import data as d
+import argparse
 
-df = pandas.read_csv("data.csv")
+def load_csv_data(filepath):
 
-emotion_colors = {
-    "neutral": "blue",
-    "calm": "green",
-    "happy": "orange",
-    "sad": "purple",
-    "angry": "red",
-    "fearful": "brown",
-    "disgust": "pink",
-    "suprised": "cyan"
+    df = pd.read_csv(filepath)
+    emotions = df.iloc[:, 0]
+    features = df.iloc[: ,1:]
+    print(features.shape)
+    
+    return emotions, features
+
+
+
+emotion_colors_labels ={
+    0: 'black', 
+    1: 'gray', 
+    2: 'cyan', 
+    3: 'orange', 
+    4: 'blue', 
+    5: 'red', 
+    6: 'purple', 
+    7: 'green', 
+    8: 'yellow'
 }
 
+legend_labels = {
+    "silence": 'black', 
+    "neutral": 'gray', 
+    "calm": 'cyan', 
+    "happy": 'orange', 
+    "sad": 'blue', 
+    "angry": 'red', 
+    "fearful": 'purple', 
+    "disgust": 'green', 
+    "surpised": 'yellow'
+}
 
-def unFlattenFeatures(feature, shape):
-    print(f"Raw feature string: {feature}")
-    print(f"Parsed feature array: {np.fromstring(feature, sep=' ')}")
-    shape = shape.strip("() ")
-    shape = tuple(map(int, shape.split(',')))
-    feature = feature.strip("[] ") 
-    feature = np.fromstring(feature, sep=' ') 
-    return feature.reshape(shape)
+emotion_colors = [
+    'black', 
+    'gray', 
+    'cyan', 
+    'orange', 
+    'blue', 
+    'red', 
+    'purple', 
+    'green', 
+    'yellow'
+]
 
-def prepare_tsne_data(data_points, feature_name):
-    features = []
-    labels = []
-    
-    for datapoint in data_points:
-        feature = getattr(datapoint, feature_name)
-        features.append(feature.flatten())
-        labels.append(datapoint.emotion)
-    
-    return np.array(features), labels
+def plot2D(features, mapped_colors):
+    plt.scatter(x=features[:, 0], y=features[:, 1], c=mapped_colors, s=30, alpha=0.7)
+    plt.title = "t-SNE visualization MFCC data"
+    xaxis_title="x",
+    yaxis_title="y",
+    plt.savefig("test.png")
 
-def plot_tsne(features, labels, feature_name, color_map):
-    n_samples = len(features)
-    perplexity = min(30, n_samples - 1)  
+def plot3D(features, mapped_colors, feature_name, title, elev=30, azim=45):
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(
+        xs=features[:, 0], 
+        ys=features[:, 1], 
+        zs=features[:, 2], 
+        c=mapped_colors, 
+        s=5, 
+        alpha=0.7
+    )
+    ax.set_title(f"t-SNE Visualization of {feature_name} Data") 
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    handles = [plt.Line2D([0], [0], marker='o', color=color, linestyle='', label=f"{emotion}") 
+          for emotion, color in legend_labels.items()]
+    ax.legend(handles=handles, title="Emotions", loc="upper left", bbox_to_anchor=(1.05, 1.0), borderaxespad=0)
+    ax.view_init(elev=elev, azim=azim)
+    fig.tight_layout()
+    fig.savefig(title)
 
-
-    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42)
-    reduced_features = tsne.fit_transform(features)
-
-    plt.figure(figsize=(10, 6))
-    for emotion in set(labels):
-        indices = [i for i, label in enumerate(labels) if label == emotion]
-        plt.scatter(
-            reduced_features[indices, 0], 
-            reduced_features[indices, 1], 
-            label=emotion, 
-            color=color_map[emotion], 
-            alpha=0.7
-        )
-    
-    plt.title(f"t-SNE Visualization of {feature_name.capitalize()}")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.legend(title="Emotions")
-    plt.grid(True)
-    plt.savefig("{feature_name.capitalize()}.png")    
 
 if __name__ == "__main__":
-    allData = []
-    for _, row in df.iterrows():
-        #print(row['MFCC'])
-        #print(row['MFCC shape'])
-        mfcc = unFlattenFeatures(row['MFCC'], row['MFCC shape'])
-        chroma = unFlattenFeatures(row['chroma'], row['chroma shape'])
-        sc = unFlattenFeatures(row['SC'], row['SC shape'])
-        zc = unFlattenFeatures(row['ZC'], row['ZC shape'])
-        rmse = unFlattenFeatures(row['RMSE'], row['RMSE shape'])
-        ml = unFlattenFeatures(row['ML'], row['ML shape'])
-        print(row['Emotion'])
-        data = d.Data(row["Emotion"], mfcc, chroma, sc, zc, rmse, ml)
-        allData.append(data)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("feature_name", help="the name of the feature", type=str)
+    parser.add_argument("csv_path", help= "the path for the csv", type=str)
+    args = parser.parse_args()
 
-        features = ["MFCC", "chroma", "SC", "ZC", "RMSE", "ML"]
+    emotions, feature = load_csv_data(args.csv_path)
+    #print(feature)
 
-        for feature_name in features:
-            feature_data, labels = prepare_tsne_data(allData, feature_name)
-            plot_tsne(feature_data, labels, feature_name, emotion_colors)
+    #print("Emotions shape:", emotions.shape)  # Should match the number of samples
+    #print("MFCC Features shape:", feature.shape)
+
+    mapped_colors = [emotion_colors[emotion] for emotion in emotions]
+    scalar = StandardScaler()
+    normalized_features = scalar.fit_transform(feature)
+    tsne = TSNE(n_components=3, perplexity=30, random_state=42)
+    feature_tsne = tsne.fit_transform(normalized_features)
+    print(feature_tsne.shape)
+
+    plot3D(feature_tsne, mapped_colors, args.feature_name, f"./plots/{args.feature_name}.png")
+    plot3D(feature_tsne, mapped_colors, args.feature_name, f"./plots/{args.feature_name}1.png", elev=60, azim=120)
+    plot3D(feature_tsne, mapped_colors, args.feature_name, f"./plots/{args.feature_name}2.png", elev=20, azim=45)
+
+   
 
         
     
