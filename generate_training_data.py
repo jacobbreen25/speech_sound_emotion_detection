@@ -65,6 +65,7 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
         d_silent = [] # [f]
         # wav_data, sr = util.load_wav_file(f)
         non_silent_data, silent_data, sr = preprocess_audio(f)
+        print(f"SR: {sr}")
         details = util.get_file_details(f,decode_details)
         # for info in details: d.append(details[info])
         d_audio.append(details['emotion'])
@@ -96,9 +97,9 @@ def generate_training_data(data_dir,decode_details,stop_after=None):
 
 if __name__ == "__main__":
     DATA_DIR = '../data'
-    OUTPUT_FILE = './data_v3.csv'
+    OUTPUT_FILE = './data_test.csv'
     DECODE_DETAILS = False
-    STOP_AFTER = None#None # set to None to go through all data
+    STOP_AFTER = 5#None # set to None to go through all data
     data, headers, counts = generate_training_data(DATA_DIR, DECODE_DETAILS, STOP_AFTER)
     # util.write_csv(OUTPUT_FILE,data,headers)
     util.write_csv(OUTPUT_FILE,data)

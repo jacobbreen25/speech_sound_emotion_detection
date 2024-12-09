@@ -20,7 +20,7 @@ def process_silent_clip(clip, sr, clip_duration=1.0):
     return processed_clip
 
 def process_non_silent_clip(clip, sr, clip_duration=1.0, step_size=1.0):
-    testing = False
+    testing = True
 
     clip_length = int(clip_duration * sr)  # Convert duration to samples
     processed_clips = []

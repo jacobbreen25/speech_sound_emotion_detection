@@ -158,13 +158,13 @@ if __name__ == "__main__":
 
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()  # Loss for classification
-    optimizer = optim.Adam(model.parameters(), lr=0.0005, weight_decay=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-4)
     
     # Initialize lists to store losses
     train_losses = []
     val_losses = []
     # Training loop
-    epochs = 10
+    epochs = 25
     for epoch in range(epochs):
         running_loss = 0.0
         val_loss = 0.0
@@ -234,6 +234,6 @@ if __name__ == "__main__":
 
     #Save model to test with new data later
     model_path = './models'
-    model_name = 'model_v2.pth'
+    model_name = 'model_v2-longtrain.pth'
     torch.save(model.state_dict(), join(model_path,model_name))
     print("Model saved successfully!")
