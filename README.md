@@ -1,3 +1,32 @@
+# Installation
+To install, first clone the github 
+```git clone git@github.com:jacobbreen25/speech_sound_emotion_detection.git```
+
+Next, install the dataset from [here](https://www.kaggle.com/datasets/uwrfkaggler/ravdess-emotional-speech-audio) and extract it to your workspace in a folder called data (Should be one directory behind the python files)
+
+# Setup/Creating the Model
+
+First, run the following command which will generate a csv file for the audio feature
+```python3 <path to python directory>/generate_training_data.py```
+
+Next, run the following command which will create the model and save it to a .pth file named model_v2-longtrain.pth in the models directory (May need to be made before running)
+```python3 <path to python directory>/network_model.py```
+
+# Run existing Model
+
+To run using an existing model, you will first need a .pth file names model_v2-longtrain.pth.
+
+Onece you have this, run the following command to run the model with test data
+```python3 <path to python directory>/run_model.py```
+
+# Run live demo
+
+Uou will first need a .pth file names model_v2-longtrain.pth.
+
+
+To run the live demo, simply run the following command
+```python3 <path to python directory>/live_audio.py```
+
 # Emotion Detection Based on Sound and Speech
 ### Andrew Boland | 01876265, Jacob Breen | 01972052, Peter Gavriel | 01417984,
 ### Mathew Langlois | 01879896, Ryan Politis | 01980638
