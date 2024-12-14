@@ -13,7 +13,7 @@ with open(training_dataset, 'r') as file:
 print(f"Features found in dataset: {num_features}")
 model = FullyConnectedNN(num_features)
 model_dir = "./models"
-model_name = "model_v2.pth"
+model_name = "model_v2-longtrain.pth"
 
 # Load only the state dictionary safely
 state_dict = torch.load(join(model_dir,model_name), weights_only=True)
